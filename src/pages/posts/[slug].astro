@@ -69,23 +69,25 @@ const articleJsonLd = {
       </div>
     </header>
 
-    {
-      toc.length > 0 && (
-        <aside class="toc" aria-label="목차">
-          <strong>목차</strong>
-          <ol>
-            {toc.map((heading) => (
-              <li class={`depth-${heading.depth}`}>
-                <a href={`#${heading.slug}`}>{heading.text}</a>
-              </li>
-            ))}
-          </ol>
-        </aside>
-      )
-    }
+    <div class:list={['post-body-grid', { 'has-toc': toc.length > 0 }]}>
+      <div class="post-content">
+        <Content />
+      </div>
 
-    <div class="post-content">
-      <Content />
+      {
+        toc.length > 0 && (
+          <aside class="toc" aria-label="목차">
+            <strong>목차</strong>
+            <ol>
+              {toc.map((heading) => (
+                <li class={`depth-${heading.depth}`}>
+                  <a href={`#${heading.slug}`}>{heading.text}</a>
+                </li>
+              ))}
+            </ol>
+          </aside>
+        )
+      }
     </div>
 
     <nav class="post-navigation" aria-label="이전 글과 다음 글">

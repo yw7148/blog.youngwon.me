@@ -29,6 +29,29 @@
       });
       pre.append(button);
     });
+
+    const tocLinks = [...document.querySelectorAll<HTMLAnchorElement>('.toc a')];
+    const headings = tocLinks
+      .map((link) => document.getElementById(decodeURIComponent(link.hash.slice(1))))
+      .filter((heading): heading is HTMLElement => heading !== null);
+
+    if (headings.length > 0) {
+      const setActiveHeading = () => {
+        const current =
+          [...headings].reverse().find((heading) => heading.getBoundingClientRect().top <= 120) ??
+          headings[0];
+
+        tocLinks.forEach((link) => {
+          const isActive = decodeURIComponent(link.hash.slice(1)) === current.id;
+          link.classList.toggle('is-active', isActive);
+          if (isActive) link.setAttribute('aria-current', 'location');
+          else link.removeAttribute('aria-current');
+        });
+      };
+
+      setActiveHeading();
+      window.addEventListener('scroll', setActiveHeading, { passive: true });
+    }
   };
 
   enhancePost();
