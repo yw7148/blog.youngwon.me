@@ -1,0 +1,31 @@
+---
+import PostList from '../../components/PostList.astro';
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import { collectTags, getAllPosts } from '../../lib/posts';
+import { tagHref } from '../../lib/tags';
+
+const posts = await getAllPosts();
+const tags = collectTags(posts);
+---
+
+<BaseLayout title="전체 글" description="백엔드 개발에서 마주친 문제와 판단의 과정을 기록한 글 목록입니다.">
+  <section class="content-width page-heading">
+    <p class="eyebrow">Posts</p>
+    <h1>전체 글</h1>
+    <p>언어와 설계, API 계약, 데이터 일관성, 운영과 배포에 관한 판단을 문제 중심으로 정리합니다.</p>
+  </section>
+
+  {
+    tags.length > 0 && (
+      <nav class="content-width tag-filter" aria-label="태그 목록">
+        {tags.map((tag) => (
+          <a href={tagHref(tag)}>{tag}</a>
+        ))}
+      </nav>
+    )
+  }
+
+  <section class="content-width section-block" aria-label="전체 글 목록">
+    <PostList posts={posts} emptyMessage="아직 공개된 글이 없습니다." />
+  </section>
+</BaseLayout>

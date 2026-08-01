@@ -1,0 +1,58 @@
+---
+const pathname = Astro.url.pathname;
+
+const navItems = [
+  { href: '/', label: '홈' },
+  { href: '/posts/', label: '글' },
+  { href: '/about/', label: '소개' },
+];
+
+const isActive = (href: string) => {
+  if (href === '/') return pathname === '/';
+  return pathname.startsWith(href);
+};
+---
+
+<header class="site-header">
+  <div class="content-width header-inner">
+    <a class="brand" href="/" aria-label="Youngwon Tech Blog 홈">
+      <span class="brand-mark" aria-hidden="true">YW</span>
+      <span>Youngwon Tech Blog</span>
+    </a>
+    <nav class="site-nav" aria-label="주요 메뉴">
+      {
+        navItems.map((item) => (
+          <a href={item.href} aria-current={isActive(item.href) ? 'page' : undefined}>
+            {item.label}
+          </a>
+        ))
+      }
+      <a href="/rss.xml">RSS</a>
+      <button class="theme-toggle" type="button" aria-label="테마 전환" data-theme-toggle>
+        <span data-theme-icon aria-hidden="true">◐</span>
+      </button>
+    </nav>
+  </div>
+</header>
+
+<script>
+  const syncThemeToggle = () => {
+    const button = document.querySelector<HTMLButtonElement>('[data-theme-toggle]');
+    const icon = document.querySelector<HTMLElement>('[data-theme-icon]');
+    if (!button || !icon) return;
+
+    const setIcon = () => {
+      icon.textContent = document.documentElement.dataset.theme === 'dark' ? '☾' : '☀';
+    };
+
+    setIcon();
+    button.addEventListener('click', () => {
+      const nextTheme = document.documentElement.dataset.theme === 'dark' ? 'light' : 'dark';
+      document.documentElement.dataset.theme = nextTheme;
+      localStorage.setItem('theme', nextTheme);
+      setIcon();
+    });
+  };
+
+  syncThemeToggle();
+</script>

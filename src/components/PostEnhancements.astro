@@ -1,0 +1,35 @@
+<script>
+  const enhancePost = () => {
+    document.querySelectorAll<HTMLElement>('.post-content :is(h2, h3)').forEach((heading) => {
+      if (!heading.id || heading.querySelector('.heading-anchor')) return;
+
+      const anchor = document.createElement('a');
+      anchor.href = `#${heading.id}`;
+      anchor.className = 'heading-anchor';
+      anchor.textContent = '#';
+      anchor.ariaLabel = `${heading.textContent ?? 'heading'} 바로가기`;
+      heading.append(' ', anchor);
+    });
+
+    document.querySelectorAll<HTMLPreElement>('.post-content pre').forEach((pre) => {
+      if (pre.querySelector('.copy-code-button')) return;
+
+      const button = document.createElement('button');
+      button.type = 'button';
+      button.className = 'copy-code-button';
+      button.textContent = 'Copy';
+      button.ariaLabel = '코드 복사';
+      button.addEventListener('click', async () => {
+        const code = pre.querySelector('code')?.textContent ?? '';
+        await navigator.clipboard.writeText(code);
+        button.textContent = 'Copied';
+        window.setTimeout(() => {
+          button.textContent = 'Copy';
+        }, 1500);
+      });
+      pre.append(button);
+    });
+  };
+
+  enhancePost();
+</script>

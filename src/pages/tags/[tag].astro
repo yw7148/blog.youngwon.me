@@ -1,0 +1,44 @@
+---
+import PostList from '../../components/PostList.astro';
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import { getAllPosts, type Post } from '../../lib/posts';
+import { slugifyTag } from '../../lib/tags';
+
+interface Props {
+  tag: string;
+  posts: Post[];
+}
+
+export async function getStaticPaths() {
+  const posts = await getAllPosts();
+  const byTag = new Map<string, { tag: string; posts: Post[] }>();
+
+  posts.forEach((post) => {
+    post.data.tags.forEach((tag) => {
+      const slug = slugifyTag(tag);
+      const current = byTag.get(slug) ?? { tag, posts: [] };
+      current.posts.push(post);
+      byTag.set(slug, current);
+    });
+  });
+
+  return Array.from(byTag.entries()).map(([slug, value]) => ({
+    params: { tag: slug },
+    props: value,
+  }));
+}
+
+const { tag, posts } = Astro.props;
+---
+
+<BaseLayout title={`${tag} 태그`} description={`${tag} 태그가 붙은 글 목록입니다.`}>
+  <section class="content-width page-heading">
+    <p class="eyebrow">Tag</p>
+    <h1>{tag}</h1>
+    <p>{posts.length}개의 글이 있습니다.</p>
+  </section>
+
+  <section class="content-width section-block" aria-label={`${tag} 태그 글 목록`}>
+    <PostList posts={posts} />
+  </section>
+</BaseLayout>

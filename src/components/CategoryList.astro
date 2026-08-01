@@ -1,0 +1,29 @@
+---
+import { tagHref } from '../lib/tags';
+
+interface Category {
+  title: string;
+  description: string;
+  tag: string;
+}
+
+interface Props {
+  categories: readonly Category[];
+}
+
+const { categories } = Astro.props;
+---
+
+<div class="category-grid">
+  {
+    categories.map((category) => (
+      <article class="category-card">
+        <h3>{category.title}</h3>
+        <p>{category.description}</p>
+        <a class="text-link" href={tagHref(category.tag)}>
+          관련 글
+        </a>
+      </article>
+    ))
+  }
+</div>
