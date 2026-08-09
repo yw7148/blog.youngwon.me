@@ -1,7 +1,7 @@
 # Youngwon Tech Blog
 
-백엔드 개발에서 마주친 문제와 선택지, 판단의 근거와 남은 한계를 기록하는 정적 기술 블로그입니다.
-Astro, TypeScript, Markdown Content Collections로 만들었습니다.
+백엔드 개발에서 마주친 문제와 선택지, 판단의 근거와 남은 한계를 기록하는 기술 블로그입니다.
+Astro, TypeScript, Live Content Collections로 만들었습니다.
 
 ## 로컬 실행
 
@@ -27,10 +27,12 @@ npm run preview
 
 ## 글 추가 방법
 
-글은 `src/content/posts` 아래에 Markdown 파일로 추가합니다.
+글은 [`yw7148/blog.youngwon.me-content`](https://github.com/yw7148/blog.youngwon.me-content)의
+`posts` 아래에 Markdown 파일로 추가합니다. 블로그는 요청 시 GitHub에서 발행 글을 가져오며,
+Vercel CDN 캐시가 갱신되는 최대 약 1분 뒤 재배포 없이 반영됩니다.
 
 ```text
-src/content/posts/my-post-slug.md
+posts/my-post-slug.md
 ```
 
 파일명이 URL slug가 됩니다. 예를 들어 `my-post-slug.md`는 `/posts/my-post-slug/`로 생성됩니다.
@@ -79,6 +81,7 @@ canonicalUrl: "https://example.com/original"
 | `description` | 예 | 검색, RSS, 공유 메타 설명에 사용합니다. |
 | `publishedAt` | 예 | 발행일입니다. |
 | `updatedAt` | 아니오 | 수정일이 있을 때만 입력합니다. |
+| `draft` | 아니오 | `true`이면 블로그 목록, 상세 페이지, RSS에서 제외합니다. |
 | `tags` | 예 | 태그 페이지와 글 목록에 사용합니다. |
 | `series` | 아니오 | 연재 글을 묶기 위한 메타데이터입니다. |
 | `canonicalUrl` | 아니오 | 외부 원문이 있을 때 canonical URL로 사용합니다. |
@@ -89,13 +92,25 @@ Vercel에서 GitHub 저장소를 import합니다.
 
 - Framework Preset: `Astro`
 - Build Command: `npm run build`
-- Output Directory: `dist`
 - Install Command: `npm install`
 - Production Domain: `blog.youngwon.me`
 
 `astro.config.mjs`와 `src/lib/site.ts`의 사이트 URL은 `https://blog.youngwon.me`로 설정되어 있습니다. 도메인을 바꾸면 두 값을 함께 바꿔야 canonical URL, RSS, sitemap이 맞게 생성됩니다.
 
 Cloudflare Web Analytics 토큰은 Vercel Project Settings의 Environment Variables에 `PUBLIC_CLOUDFLARE_WEB_ANALYTICS_TOKEN`으로 추가합니다.
+
+콘텐츠 설정은 Vercel Project Settings의 Environment Variables에서 관리합니다.
+
+| 변수 | 필수 | 기본값 | 설명 |
+| --- | --- | --- | --- |
+| `CONTENT_REPOSITORY` | 아니오 | `yw7148/blog.youngwon.me-content` | `owner/repository` 형식의 콘텐츠 저장소 |
+| `CONTENT_REF` | 아니오 | `main` | 읽을 브랜치 또는 Git ref |
+| `GITHUB_TOKEN` | 아니오 | 없음 | GitHub API 호출 한도를 높이기 위한 서버 전용 토큰 |
+
+콘텐츠 저장소가 public이므로 토큰 없이도 동작합니다. 다만 비인증 GitHub API 호출 한도에
+영향받지 않도록 읽기 전용 fine-grained token을 `GITHUB_TOKEN`으로 설정하는 것을 권장합니다.
+이 값은 브라우저에 노출되는 `PUBLIC_` 접두사를 사용하지 않습니다. 로컬 설정 예시는
+`.env.example`을 `.env`로 복사해 사용합니다.
 
 ## Cloudflare DNS 연결
 
@@ -114,7 +129,7 @@ Vercel 프로젝트의 Domains 화면에서 `blog.youngwon.me`를 추가하고, 
 
 도메인 연결 후 Search Console에 `https://blog.youngwon.me` 속성을 등록합니다.
 
-- `https://blog.youngwon.me/sitemap-index.xml` 제출
+- `https://blog.youngwon.me/sitemap.xml` 제출
 - `robots.txt` 접근 확인
 - 대표 글 URL 검사
 - canonical URL이 self-referencing으로 인식되는지 확인
@@ -122,7 +137,8 @@ Vercel 프로젝트의 Domains 화면에서 `blog.youngwon.me`를 추가하고, 
 
 ## 구현된 기능
 
-- Astro Content Collections 기반 Markdown 글 관리
+- Astro Live Content Collections 기반 GitHub Markdown 실시간 조회
+- Vercel SSR 및 60초 CDN 캐시
 - `/`, `/posts`, `/posts/[slug]`, `/tags/[tag]`, `/about`
 - RSS, Sitemap, `robots.txt`
 - canonical URL, Open Graph, Twitter Card, Article JSON-LD

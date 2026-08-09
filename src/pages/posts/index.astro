@@ -1,11 +1,12 @@
 ---
 import PostList from '../../components/PostList.astro';
 import BaseLayout from '../../layouts/BaseLayout.astro';
-import { collectTags, getAllPosts } from '../../lib/posts';
+import { collectTags, getAllPosts, setContentCacheHeaders } from '../../lib/posts';
 import { tagHref } from '../../lib/tags';
 
 const posts = await getAllPosts();
 const tags = collectTags(posts);
+setContentCacheHeaders(Astro.response.headers);
 ---
 
 <BaseLayout title="전체 글" description="백엔드 개발에서 마주친 문제와 판단의 과정을 기록한 글 목록입니다.">

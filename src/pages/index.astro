@@ -2,11 +2,12 @@
 import CategoryList from '../components/CategoryList.astro';
 import PostList from '../components/PostList.astro';
 import BaseLayout from '../layouts/BaseLayout.astro';
-import { getAllPosts } from '../lib/posts';
+import { getAllPosts, setContentCacheHeaders } from '../lib/posts';
 import { SITE } from '../lib/site';
 
 const posts = await getAllPosts();
 const latestPosts = posts.slice(0, 5);
+setContentCacheHeaders(Astro.response.headers);
 ---
 
 <BaseLayout title={SITE.title} description={SITE.description}>

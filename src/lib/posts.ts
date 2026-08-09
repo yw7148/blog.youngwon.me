@@ -1,6 +1,20 @@
-import { getCollection, type CollectionEntry } from 'astro:content';
+import { getLiveCollection, getLiveEntry } from 'astro:content';
+import type { LiveDataEntry } from 'astro';
 
-export type Post = CollectionEntry<'posts'>;
+export interface PostData {
+  title: string;
+  description: string;
+  publishedAt: Date;
+  updatedAt?: Date;
+  draft: boolean;
+  tags: string[];
+  series?: string;
+  canonicalUrl?: string;
+  body: string;
+  headings: Array<{ depth: number; slug: string; text: string }>;
+}
+
+export type Post = LiveDataEntry<PostData>;
 
 export function sortPosts(posts: Post[]) {
   return [...posts].sort((a, b) => {
@@ -9,7 +23,15 @@ export function sortPosts(posts: Post[]) {
 }
 
 export async function getAllPosts() {
-  return sortPosts(await getCollection('posts'));
+  const { entries, error } = await getLiveCollection('posts');
+  if (error) throw error;
+  return sortPosts((entries ?? []).filter(({ data }) => !data.draft));
+}
+
+export async function getPost(id: string) {
+  const { entry, error } = await getLiveEntry('posts', { id });
+  if (error) throw error;
+  return entry?.data.draft ? undefined : entry;
 }
 
 export function getReadingTime(body = '') {
@@ -35,4 +57,8 @@ export function getAdjacentPosts(posts: Post[], currentId: string) {
     newer: index > 0 ? posts[index - 1] : undefined,
     older: index >= 0 && index < posts.length - 1 ? posts[index + 1] : undefined,
   };
+}
+
+export function setContentCacheHeaders(headers: Headers) {
+  headers.set('Cache-Control', 'public, max-age=0, s-maxage=60, stale-while-revalidate=300');
 }
