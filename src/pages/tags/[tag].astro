@@ -1,34 +1,17 @@
 ---
 import PostList from '../../components/PostList.astro';
 import BaseLayout from '../../layouts/BaseLayout.astro';
-import { getAllPosts, type Post } from '../../lib/posts';
+import { getAllPosts, setContentCacheHeaders } from '../../lib/posts';
 import { slugifyTag } from '../../lib/tags';
 
-interface Props {
-  tag: string;
-  posts: Post[];
-}
+const allPosts = await getAllPosts();
+const slug = Astro.params.tag;
+const tag = allPosts.flatMap((post) => post.data.tags).find((value) => slugifyTag(value) === slug);
 
-export async function getStaticPaths() {
-  const posts = await getAllPosts();
-  const byTag = new Map<string, { tag: string; posts: Post[] }>();
+if (!tag) return Astro.rewrite('/404');
 
-  posts.forEach((post) => {
-    post.data.tags.forEach((tag) => {
-      const slug = slugifyTag(tag);
-      const current = byTag.get(slug) ?? { tag, posts: [] };
-      current.posts.push(post);
-      byTag.set(slug, current);
-    });
-  });
-
-  return Array.from(byTag.entries()).map(([slug, value]) => ({
-    params: { tag: slug },
-    props: value,
-  }));
-}
-
-const { tag, posts } = Astro.props;
+const posts = allPosts.filter((post) => post.data.tags.includes(tag));
+setContentCacheHeaders(Astro.response.headers);
 ---
 
 <BaseLayout title={`${tag} 태그`} description={`${tag} 태그가 붙은 글 목록입니다.`}>

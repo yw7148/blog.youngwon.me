@@ -1,34 +1,33 @@
 ---
-import { render, type CollectionEntry } from 'astro:content';
+import { render } from 'astro:content';
 import PostEnhancements from '../../components/PostEnhancements.astro';
 import BaseLayout from '../../layouts/BaseLayout.astro';
 import { formatDate } from '../../lib/format';
-import { getAdjacentPosts, getAllPosts, getReadingTime } from '../../lib/posts';
+import {
+  getAdjacentPosts,
+  getAllPosts,
+  getPost,
+  getReadingTime,
+  setContentCacheHeaders,
+} from '../../lib/posts';
 import { SITE } from '../../lib/site';
 import { tagHref } from '../../lib/tags';
 
-interface Props {
-  post: CollectionEntry<'posts'>;
-}
+const slug = Astro.params.slug;
+if (!slug) return Astro.rewrite('/404');
 
-export async function getStaticPaths() {
-  const posts = await getAllPosts();
+const post = await getPost(slug);
+if (!post) return Astro.rewrite('/404');
 
-  return posts.map((post) => ({
-    params: { slug: post.id },
-    props: { post },
-  }));
-}
-
-const { post } = Astro.props;
-const { Content, headings } = await render(post);
+const { Content } = await render(post);
 const posts = await getAllPosts();
 const { newer, older } = getAdjacentPosts(posts, post.id);
-const readingTime = getReadingTime(post.body);
+const readingTime = getReadingTime(post.data.body);
 const localCanonical = new URL(`/posts/${post.id}/`, SITE.url).toString();
 const canonical = post.data.canonicalUrl ?? localCanonical;
-const toc = headings.filter((heading) => heading.depth > 1 && heading.depth <= 3);
+const toc = post.data.headings.filter((heading) => heading.depth > 1 && heading.depth <= 3);
 const updatedAt = post.data.updatedAt ?? post.data.publishedAt;
+setContentCacheHeaders(Astro.response.headers);
 const articleJsonLd = {
   '@context': 'https://schema.org',
   '@type': 'Article',

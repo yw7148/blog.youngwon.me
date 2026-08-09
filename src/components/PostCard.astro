@@ -1,15 +1,14 @@
 ---
-import type { CollectionEntry } from 'astro:content';
 import { formatDate } from '../lib/format';
-import { getReadingTime } from '../lib/posts';
+import { getReadingTime, type Post } from '../lib/posts';
 import { tagHref } from '../lib/tags';
 
 interface Props {
-  post: CollectionEntry<'posts'>;
+  post: Post;
 }
 
 const { post } = Astro.props;
-const readingTime = getReadingTime(post.body);
+const readingTime = getReadingTime(post.data.body);
 ---
 
 <article class="post-card">
