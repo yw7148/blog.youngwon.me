@@ -16,7 +16,7 @@ const {
   title = SITE.title,
   description = SITE.description,
   canonical = new URL(Astro.url.pathname, SITE.url).toString(),
-  image = '/og-default.svg',
+  image = '/og-default.png',
   type = 'website',
 } = Astro.props;
 
@@ -33,8 +33,9 @@ const cloudflareAnalyticsToken = import.meta.env.PUBLIC_CLOUDFLARE_WEB_ANALYTICS
     <meta name="generator" content={Astro.generator} />
     <meta name="description" content={description} />
     <meta name="theme-color" content="#0f766e" />
-    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-    <link rel="icon" href="/favicon.ico" />
+    <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32.png" />
+    <link rel="icon" href="/favicon.ico" sizes="any" />
+    <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
     <link rel="canonical" href={canonical} />
     <link rel="alternate" type="application/rss+xml" title={SITE.title} href="/rss.xml" />
     <meta property="og:type" content={type} />
