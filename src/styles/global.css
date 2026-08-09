@@ -120,16 +120,11 @@ select {
 }
 
 .brand-mark {
-  display: grid;
   width: 34px;
   height: 34px;
-  place-items: center;
   border: 1px solid var(--border);
   border-radius: 8px;
-  background: var(--surface);
-  color: var(--accent-strong);
-  font-size: 0.78rem;
-  letter-spacing: 0;
+  object-fit: cover;
 }
 
 .site-nav {
