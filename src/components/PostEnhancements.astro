@@ -1,4 +1,105 @@
+---
+interface Props {
+  postId: string;
+  postTitle: string;
+}
+
+const { postId, postTitle } = Astro.props;
+---
+
+<section
+  class="post-actions"
+  aria-label="글 반응과 공유"
+  data-post-actions
+  data-post-id={postId}
+  data-post-title={postTitle}
+>
+  <button class="post-action-button like-button" type="button" data-like-button disabled>
+    <span aria-hidden="true">♥</span>
+    <span data-like-label>좋아요</span>
+    <span data-like-count>—</span>
+  </button>
+  <button class="post-action-button" type="button" data-share-button>
+    <span aria-hidden="true">↗</span>
+    공유
+  </button>
+  <p class="post-action-status" aria-live="polite" data-action-status></p>
+</section>
+
 <script>
+  interface MetricsResponse {
+    views: number;
+    likes: number;
+    accepted: boolean;
+    likedToday: boolean;
+    error?: string;
+  }
+
+  type DailyActions = Record<string, string>;
+
+  const VISITOR_KEY = 'youngwon-blog:visitor-id:v1';
+  const ACTIONS_KEY = 'youngwon-blog:daily-actions:v1';
+  const VISITOR_ID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+
+  const koreanDate = () => {
+    const parts = new Intl.DateTimeFormat('en-US', {
+      timeZone: 'Asia/Seoul',
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit',
+    }).formatToParts();
+    const values = Object.fromEntries(parts.map(({ type, value }) => [type, value]));
+    return `${values.year}-${values.month}-${values.day}`;
+  };
+
+  const createVisitorId = () => {
+    if (typeof crypto.randomUUID === 'function') return crypto.randomUUID();
+
+    const bytes = crypto.getRandomValues(new Uint8Array(16));
+    bytes[6] = (bytes[6] & 0x0f) | 0x40;
+    bytes[8] = (bytes[8] & 0x3f) | 0x80;
+    const hex = [...bytes].map((value) => value.toString(16).padStart(2, '0')).join('');
+    return `${hex.slice(0, 8)}-${hex.slice(8, 12)}-${hex.slice(12, 16)}-${hex.slice(16, 20)}-${hex.slice(20)}`;
+  };
+
+  const visitorId = () => {
+    try {
+      const stored = localStorage.getItem(VISITOR_KEY);
+      if (stored && VISITOR_ID_PATTERN.test(stored)) return stored;
+
+      const created = createVisitorId();
+      localStorage.setItem(VISITOR_KEY, created);
+      return created;
+    } catch {
+      return createVisitorId();
+    }
+  };
+
+  const readDailyActions = () => {
+    try {
+      const parsed = JSON.parse(localStorage.getItem(ACTIONS_KEY) ?? '{}') as DailyActions;
+      return Object.fromEntries(
+        Object.entries(parsed).filter(([, date]) => date === koreanDate()),
+      ) as DailyActions;
+    } catch {
+      return {};
+    }
+  };
+
+  const rememberAction = (action: 'view' | 'like', currentPostId: string) => {
+    try {
+      const actions = readDailyActions();
+      actions[`${action}:${currentPostId}`] = koreanDate();
+      localStorage.setItem(ACTIONS_KEY, JSON.stringify(actions));
+    } catch {
+      // Browsers with storage disabled still use the server-side guard for this page load.
+    }
+  };
+
+  const hasActionToday = (action: 'view' | 'like', currentPostId: string) => {
+    return readDailyActions()[`${action}:${currentPostId}`] === koreanDate();
+  };
+
   const enhancePost = () => {
     document.querySelectorAll<HTMLElement>('.post-content :is(h2, h3)').forEach((heading) => {
       if (!heading.id || heading.querySelector('.heading-anchor')) return;
@@ -52,6 +153,99 @@
       setActiveHeading();
       window.addEventListener('scroll', setActiveHeading, { passive: true });
     }
+
+    const actions = document.querySelector<HTMLElement>('[data-post-actions]');
+    if (!actions) return;
+
+    const currentPostId = actions.dataset.postId;
+    const currentPostTitle = actions.dataset.postTitle;
+    const likeButton = actions.querySelector<HTMLButtonElement>('[data-like-button]');
+    const likeLabel = actions.querySelector<HTMLElement>('[data-like-label]');
+    const likeCount = actions.querySelector<HTMLElement>('[data-like-count]');
+    const shareButton = actions.querySelector<HTMLButtonElement>('[data-share-button]');
+    const status = actions.querySelector<HTMLElement>('[data-action-status]');
+    const viewCount = document.querySelector<HTMLElement>('[data-post-view-count]');
+    if (
+      !currentPostId ||
+      !currentPostTitle ||
+      !likeButton ||
+      !likeLabel ||
+      !likeCount ||
+      !shareButton ||
+      !status
+    ) {
+      return;
+    }
+
+    const countFormatter = new Intl.NumberFormat('ko-KR');
+    let likedToday = hasActionToday('like', currentPostId);
+    likeButton.disabled = true;
+    likeButton.classList.toggle('is-liked', likedToday);
+    if (likedToday) likeLabel.textContent = '오늘 좋아요 완료';
+
+    const updateMetrics = (metrics: MetricsResponse) => {
+      if (viewCount) viewCount.textContent = countFormatter.format(metrics.views);
+      likeCount.textContent = countFormatter.format(metrics.likes);
+      likedToday = metrics.likedToday;
+      likeButton.classList.toggle('is-liked', likedToday);
+      likeButton.disabled = likedToday;
+      likeButton.setAttribute('aria-pressed', String(likedToday));
+      likeLabel.textContent = likedToday ? '오늘 좋아요 완료' : '좋아요';
+    };
+
+    const recordMetric = async (action: 'view' | 'like') => {
+      const response = await fetch(`/api/posts/${encodeURIComponent(currentPostId)}/metrics`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action, visitorId: visitorId() }),
+      });
+      const result = (await response.json()) as MetricsResponse;
+      if (!response.ok) throw new Error(result.error ?? '글 지표 요청에 실패했습니다.');
+      rememberAction(action, currentPostId);
+      updateMetrics(result);
+      return result;
+    };
+
+    recordMetric('view')
+      .then(() => {
+        status.textContent = '';
+      })
+      .catch(() => {
+        status.textContent = '조회수와 좋아요를 불러오지 못했습니다.';
+        likeButton.disabled = likedToday;
+      });
+
+    likeButton.addEventListener('click', async () => {
+      likeButton.disabled = true;
+      status.textContent = '좋아요를 반영하고 있습니다.';
+      try {
+        const result = await recordMetric('like');
+        status.textContent = result.accepted
+          ? '좋아요를 남겼습니다.'
+          : '오늘은 이미 좋아요를 눌렀습니다.';
+      } catch {
+        likeButton.disabled = likedToday;
+        status.textContent = '좋아요를 반영하지 못했습니다. 잠시 후 다시 시도해 주세요.';
+      }
+    });
+
+    shareButton.addEventListener('click', async () => {
+      const url = new URL(window.location.href);
+      url.hash = '';
+
+      try {
+        if (navigator.share) {
+          await navigator.share({ title: currentPostTitle, url: url.toString() });
+          status.textContent = '공유 창을 열었습니다.';
+        } else {
+          await navigator.clipboard.writeText(url.toString());
+          status.textContent = '글 링크를 복사했습니다.';
+        }
+      } catch (error) {
+        if (error instanceof DOMException && error.name === 'AbortError') return;
+        status.textContent = '글 링크를 공유하지 못했습니다.';
+      }
+    });
   };
 
   enhancePost();

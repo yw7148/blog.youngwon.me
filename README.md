@@ -99,6 +99,17 @@ Vercel에서 GitHub 저장소를 import합니다.
 
 Cloudflare Web Analytics 토큰은 Vercel Project Settings의 Environment Variables에 `PUBLIC_CLOUDFLARE_WEB_ANALYTICS_TOKEN`으로 추가합니다.
 
+글별 조회수와 좋아요는 Vercel Marketplace에서 Upstash Redis를 연결한 뒤 활성화됩니다.
+Marketplace 연동이 주입하는 다음 서버 전용 환경 변수를 로컬에서도 설정합니다.
+
+```sh
+UPSTASH_REDIS_REST_URL=your_rest_url
+UPSTASH_REDIS_REST_TOKEN=your_rest_token
+```
+
+조회와 좋아요는 브라우저에 저장된 익명 식별자를 기준으로 글마다 한국 날짜 기준 하루 한 번만
+집계합니다. 브라우저 저장소를 삭제하거나 시크릿 모드를 사용하면 새 방문자로 처리됩니다.
+
 콘텐츠 설정은 Vercel Project Settings의 Environment Variables에서 관리합니다.
 
 | 변수 | 필수 | 기본값 | 설명 |
@@ -145,4 +156,5 @@ Vercel 프로젝트의 Domains 화면에서 `blog.youngwon.me`를 추가하고, 
 - Cloudflare Web Analytics 환경 변수 지원
 - 작성일, 수정일, 예상 읽기 시간, 태그, 이전/다음 글
 - heading anchor, 목차, 코드 복사 버튼
+- 글별 조회수, 하루 한 번 좋아요, Web Share 및 링크 복사
 - 반응형 레이아웃과 다크 모드
