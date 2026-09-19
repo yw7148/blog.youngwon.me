@@ -1,5 +1,5 @@
 ---
-import { formatDate } from '../lib/format';
+import { formatCompactDate } from '../lib/format';
 import { getReadingTime, type Post } from '../lib/posts';
 import { tagHref } from '../lib/tags';
 
@@ -13,14 +13,13 @@ const readingTime = getReadingTime(post.data.body);
 
 <article class="post-card">
   <div class="post-card-meta">
-    <time datetime={post.data.publishedAt.toISOString()}>{formatDate(post.data.publishedAt)}</time>
+    <time datetime={post.data.publishedAt.toISOString()}>{formatCompactDate(post.data.publishedAt)}</time>
     <span aria-hidden="true">·</span>
     <span>{readingTime}분</span>
   </div>
   <h3>
     <a href={`/posts/${post.id}/`}>{post.data.title}</a>
   </h3>
-  <p>{post.data.description}</p>
   <div class="tag-row" aria-label="태그">
     {post.data.tags.map((tag) => <a href={tagHref(tag)}>{tag}</a>)}
   </div>
