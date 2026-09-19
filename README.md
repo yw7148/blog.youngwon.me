@@ -105,10 +105,41 @@ Marketplace 연동이 주입하는 다음 서버 전용 환경 변수를 로컬�
 ```sh
 UPSTASH_REDIS_REST_URL=your_rest_url
 UPSTASH_REDIS_REST_TOKEN=your_rest_token
+COMMENT_HMAC_SECRET=generate_a_random_secret_of_at_least_32_bytes
 ```
 
 조회와 좋아요는 브라우저에 저장된 익명 식별자를 기준으로 글마다 한국 날짜 기준 하루 한 번만
 집계합니다. 브라우저 저장소를 삭제하거나 시크릿 모드를 사용하면 새 방문자로 처리됩니다.
+
+`COMMENT_HMAC_SECRET`은 댓글 작성 빈도 제한에 사용할 요청자 식별자를 HMAC 처리하는 서버 전용
+비밀값입니다. 32바이트 이상의 무작위 값 사용을 권장하며 `PUBLIC_` 접두사를 붙이지 않습니다.
+댓글은 동일 식별자 기준 1분에 한 번 작성할 수 있고, 원본 IP는 Redis에 저장하지 않습니다.
+
+### 댓글 데이터와 운영
+
+댓글은 같은 Upstash Redis에 다음 구조로 저장됩니다.
+
+| 키 | Redis 타입 | 값 | TTL |
+| --- | --- | --- | --- |
+| `blog:post:<slug>:comments` | Sorted Set | 댓글 ID, score는 작성 시각(ms) | 없음 |
+| `blog:comment:<comment-id>` | String(JSON) | ID, 작성자, 내용, 작성 시각 | 없음 |
+| `blog:comment-rate:<hmac>` | String | 작성 빈도 제한 표시 | 60초 |
+
+댓글과 게시글별 목록에는 TTL을 설정하지 않습니다. Upstash 데이터베이스도 eviction을 사용하지
+않도록 설정해 오래된 댓글이 임의로 제거되지 않게 합니다. `COMMENT_HMAC_SECRET`을 바꾸면 기존
+댓글에는 영향이 없으며 작성 빈도 제한 식별자만 새로 만들어집니다.
+
+부적절한 댓글은 Upstash 콘솔에서 댓글 ID를 확인한 뒤 다음 두 명령으로 제거합니다. `<slug>`와
+`<comment-id>`는 실제 값으로 바꿉니다.
+
+```redis
+ZREM blog:post:<slug>:comments <comment-id>
+DEL blog:comment:<comment-id>
+```
+
+댓글 ID는 `ZRANGE blog:post:<slug>:comments 0 -1 REV`로 조회하고, 각 본문은
+`GET blog:comment:<comment-id>`로 확인할 수 있습니다. 목록과 본문 키를 항상 함께 제거해야 빈
+항목이 남지 않습니다. 댓글에는 사용자 입력 HTML을 렌더링하지 않고 일반 텍스트만 표시합니다.
 
 콘텐츠 설정은 Vercel Project Settings의 Environment Variables에서 관리합니다.
 
@@ -157,4 +188,5 @@ Vercel 프로젝트의 Domains 화면에서 `blog.youngwon.me`를 추가하고, 
 - 작성일, 수정일, 예상 읽기 시간, 태그, 이전/다음 글
 - heading anchor, 목차, 코드 복사 버튼
 - 글별 조회수, 하루 한 번 좋아요, Web Share 및 링크 복사
+- 게시글별 최신순 댓글, 20개 단위 더 보기, HMAC 기반 작성 빈도 제한
 - 반응형 레이아웃과 다크 모드

@@ -1,5 +1,6 @@
 ---
 import { render } from 'astro:content';
+import PostComments from '../../components/PostComments.astro';
 import PostEnhancements from '../../components/PostEnhancements.astro';
 import BaseLayout from '../../layouts/BaseLayout.astro';
 import { formatDate } from '../../lib/format';
@@ -92,6 +93,8 @@ const articleJsonLd = {
     </div>
 
     <PostEnhancements postId={post.id} postTitle={post.data.title} />
+
+    <PostComments postId={post.id} />
 
     <nav class="post-navigation" aria-label="이전 글과 다음 글">
       {
