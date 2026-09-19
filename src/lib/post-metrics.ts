@@ -1,4 +1,4 @@
-import { Redis } from '@upstash/redis';
+import { getRedis } from './redis.ts';
 
 export type MetricAction = 'view' | 'like';
 
@@ -29,18 +29,6 @@ local liked_today = redis.call('EXISTS', like_key)
 
 return { accepted, views, likes, liked_today }
 `;
-
-let redis: Redis | undefined;
-
-function getRedis() {
-  if (!redis) {
-    const url = import.meta.env.UPSTASH_REDIS_REST_URL;
-    const token = import.meta.env.UPSTASH_REDIS_REST_TOKEN;
-    if (!url || !token) throw new Error('Upstash Redis environment variables are not configured.');
-    redis = new Redis({ url, token });
-  }
-  return redis;
-}
 
 export function getKoreanDayWindow(now = new Date()) {
   const koreanTime = new Date(now.getTime() + KOREA_OFFSET_MS);

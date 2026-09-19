@@ -1,0 +1,231 @@
+---
+interface Props {
+  postId: string;
+}
+
+const { postId } = Astro.props;
+---
+
+<section class="post-comments" aria-labelledby="comments-heading" data-comments data-post-id={postId}>
+  <div class="comments-heading">
+    <div>
+      <p class="eyebrow">Discussion</p>
+      <h2 id="comments-heading">댓글</h2>
+    </div>
+    <p>글에 관한 의견이나 질문을 남겨 주세요.</p>
+  </div>
+
+  <p class="comments-status" role="status" aria-live="polite" data-comments-status>
+    댓글을 불러오는 중입니다.
+  </p>
+  <p class="comments-empty" data-comments-empty hidden>아직 댓글이 없습니다. 첫 댓글을 남겨 보세요.</p>
+  <ol class="comment-list" data-comment-list aria-busy="true"></ol>
+  <button class="button secondary comments-more" type="button" data-comments-more hidden>
+    댓글 더 보기
+  </button>
+
+  <form class="comment-form" data-comment-form>
+    <div class="comment-field">
+      <label for="comment-author">작성자 이름</label>
+      <input
+        id="comment-author"
+        name="author"
+        type="text"
+        minlength="1"
+        maxlength="20"
+        autocomplete="name"
+        required
+      />
+      <span>1~20자</span>
+    </div>
+    <div class="comment-field">
+      <label for="comment-content">댓글 내용</label>
+      <textarea
+        id="comment-content"
+        name="content"
+        rows="5"
+        minlength="1"
+        maxlength="1000"
+        required
+      ></textarea>
+      <span><output data-content-count>0</output>/1,000자</span>
+    </div>
+    <button class="button primary comment-submit" type="submit" data-comment-submit>
+      댓글 등록
+    </button>
+  </form>
+</section>
+
+<script>
+  interface CommentItem {
+    id: string;
+    author: string;
+    content: string;
+    createdAt: string;
+  }
+
+  interface CommentListResponse {
+    comments: CommentItem[];
+    nextOffset: number;
+    hasMore: boolean;
+    error?: string;
+  }
+
+  interface CommentCreateResponse {
+    comment?: CommentItem;
+    error?: string;
+  }
+
+  const commentDateFormatter = new Intl.DateTimeFormat('ko-KR', {
+    dateStyle: 'medium',
+    timeStyle: 'short',
+  });
+
+  const createCommentElement = (comment: CommentItem) => {
+    const item = document.createElement('li');
+    item.className = 'comment-item';
+    item.dataset.commentId = comment.id;
+
+    const header = document.createElement('div');
+    header.className = 'comment-meta';
+
+    const author = document.createElement('strong');
+    author.textContent = comment.author;
+
+    const time = document.createElement('time');
+    time.dateTime = comment.createdAt;
+    const date = new Date(comment.createdAt);
+    time.textContent = Number.isNaN(date.valueOf())
+      ? comment.createdAt
+      : commentDateFormatter.format(date);
+
+    const content = document.createElement('p');
+    content.textContent = comment.content;
+
+    header.append(author, time);
+    item.append(header, content);
+    return item;
+  };
+
+  const setupComments = () => {
+    const root = document.querySelector<HTMLElement>('[data-comments]');
+    if (!root) return;
+
+    const postId = root.dataset.postId;
+    const list = root.querySelector<HTMLOListElement>('[data-comment-list]');
+    const empty = root.querySelector<HTMLElement>('[data-comments-empty]');
+    const status = root.querySelector<HTMLElement>('[data-comments-status]');
+    const moreButton = root.querySelector<HTMLButtonElement>('[data-comments-more]');
+    const form = root.querySelector<HTMLFormElement>('[data-comment-form]');
+    const authorInput = form?.elements.namedItem('author');
+    const contentInput = form?.elements.namedItem('content');
+    const submitButton = root.querySelector<HTMLButtonElement>('[data-comment-submit]');
+    const contentCount = root.querySelector<HTMLOutputElement>('[data-content-count]');
+
+    if (
+      !postId ||
+      !list ||
+      !empty ||
+      !status ||
+      !moreButton ||
+      !form ||
+      !(authorInput instanceof HTMLInputElement) ||
+      !(contentInput instanceof HTMLTextAreaElement) ||
+      !submitButton ||
+      !contentCount
+    ) {
+      return;
+    }
+
+    let nextOffset = 0;
+    let loading = false;
+
+    const setLoading = (value: boolean) => {
+      loading = value;
+      list.setAttribute('aria-busy', String(value));
+      moreButton.disabled = value;
+    };
+
+    const loadComments = async (initial = false) => {
+      if (loading) return;
+      setLoading(true);
+      moreButton.textContent = '댓글 더 보기';
+      status.textContent = initial ? '댓글을 불러오는 중입니다.' : '이전 댓글을 불러오는 중입니다.';
+
+      try {
+        const response = await fetch(
+          `/api/posts/${encodeURIComponent(postId)}/comments?offset=${nextOffset}`,
+          { headers: { Accept: 'application/json' } },
+        );
+        const result = (await response.json()) as CommentListResponse;
+        if (!response.ok) throw new Error(result.error ?? '댓글을 불러오지 못했습니다.');
+
+        const fragment = document.createDocumentFragment();
+        result.comments.forEach((comment) => fragment.append(createCommentElement(comment)));
+        list.append(fragment);
+        nextOffset = result.nextOffset;
+        empty.hidden = list.childElementCount > 0;
+        moreButton.hidden = !result.hasMore;
+        status.textContent = '';
+      } catch (error) {
+        status.textContent = '댓글을 불러오지 못했습니다. 잠시 후 다시 시도해 주세요.';
+        moreButton.textContent = '댓글 다시 불러오기';
+        moreButton.hidden = false;
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    moreButton.addEventListener('click', () => loadComments());
+
+    contentInput.addEventListener('input', () => {
+      contentCount.value = String(Array.from(contentInput.value).length);
+    });
+
+    form.addEventListener('submit', async (event) => {
+      event.preventDefault();
+      if (loading || !form.reportValidity()) return;
+
+      const author = authorInput.value.trim();
+      const content = contentInput.value.trim();
+      if (!author || !content) {
+        status.textContent = '작성자 이름과 댓글 내용을 입력해 주세요.';
+        return;
+      }
+
+      submitButton.disabled = true;
+      status.textContent = '댓글을 등록하고 있습니다.';
+
+      try {
+        const response = await fetch(`/api/posts/${encodeURIComponent(postId)}/comments`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
+          body: JSON.stringify({ author, content }),
+        });
+        const result = (await response.json()) as CommentCreateResponse;
+        if (!response.ok || !result.comment) {
+          throw new Error(result.error ?? '댓글을 등록하지 못했습니다.');
+        }
+
+        list.prepend(createCommentElement(result.comment));
+        nextOffset += 1;
+        empty.hidden = true;
+        contentInput.value = '';
+        contentCount.value = '0';
+        status.textContent = '댓글이 등록되었습니다.';
+        contentInput.focus();
+      } catch (error) {
+        status.textContent =
+          error instanceof Error && error.message
+            ? error.message
+            : '댓글을 등록하지 못했습니다. 잠시 후 다시 시도해 주세요.';
+      } finally {
+        submitButton.disabled = false;
+      }
+    });
+
+    loadComments(true);
+  };
+
+  setupComments();
+</script>
