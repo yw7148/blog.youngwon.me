@@ -539,6 +539,8 @@ select {
   overflow-x: auto;
   border-radius: 8px;
   background: var(--code-bg) !important;
+  color: var(--code-text);
+  font-family: var(--font-mono);
   padding: 16px;
 }
 

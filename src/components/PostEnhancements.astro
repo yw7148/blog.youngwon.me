@@ -27,6 +27,8 @@ const { postId, postTitle } = Astro.props;
 </section>
 
 <script>
+  import { getCodeBlockText } from '../lib/code-block';
+
   interface MetricsResponse {
     views: number;
     likes: number;
@@ -115,13 +117,13 @@ const { postId, postTitle } = Astro.props;
     document.querySelectorAll<HTMLPreElement>('.post-content pre').forEach((pre) => {
       if (pre.querySelector('.copy-code-button')) return;
 
+      const code = getCodeBlockText(pre);
       const button = document.createElement('button');
       button.type = 'button';
       button.className = 'copy-code-button';
       button.textContent = 'Copy';
       button.ariaLabel = '코드 복사';
       button.addEventListener('click', async () => {
-        const code = pre.querySelector('code')?.textContent ?? '';
         await navigator.clipboard.writeText(code);
         button.textContent = 'Copied';
         window.setTimeout(() => {

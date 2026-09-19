@@ -9,7 +9,7 @@
     "dev": "astro dev",
     "build": "astro build",
     "check": "astro check",
-    "test": "node --experimental-strip-types --test src/lib/post-metrics.test.mjs",
+    "test": "node --experimental-strip-types --test src/lib/*.test.mjs",
     "preview": "astro preview",
     "astro": "astro"
   },
