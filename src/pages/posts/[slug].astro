@@ -60,6 +60,8 @@ const articleJsonLd = {
         }
         <span aria-hidden="true">·</span>
         <span>{readingTime}분</span>
+        <span aria-hidden="true">·</span>
+        <span>조회 <span data-post-view-count>—</span></span>
       </div>
       <h1>{post.data.title}</h1>
       <p>{post.data.description}</p>
@@ -89,6 +91,8 @@ const articleJsonLd = {
       }
     </div>
 
+    <PostEnhancements postId={post.id} postTitle={post.data.title} />
+
     <nav class="post-navigation" aria-label="이전 글과 다음 글">
       {
         newer ? (
@@ -112,6 +116,5 @@ const articleJsonLd = {
       }
     </nav>
   </article>
-  <PostEnhancements />
   <script is:inline type="application/ld+json" set:html={JSON.stringify(articleJsonLd)} />
 </BaseLayout>
