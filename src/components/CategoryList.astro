@@ -3,7 +3,6 @@ import { tagHref } from '../lib/tags';
 
 interface Category {
   title: string;
-  description: string;
   tag: string;
 }
 
@@ -18,14 +17,9 @@ const { categories } = Astro.props;
   {
     categories.map((category) => (
       <article class="category-card">
-        <span class="category-accent" aria-hidden="true"></span>
         <h3>
-          <a href={tagHref(category.tag)}>
-            {category.title}
-            <span aria-hidden="true">→</span>
-          </a>
+          <a href={tagHref(category.tag)}>{category.title}</a>
         </h3>
-        <p>{category.description}</p>
       </article>
     ))
   }

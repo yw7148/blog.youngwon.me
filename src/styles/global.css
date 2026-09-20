@@ -235,6 +235,40 @@ select {
   line-height: 1.05;
 }
 
+.hero-title-row {
+  display: flex;
+  width: fit-content;
+  max-width: 100%;
+  align-items: flex-end;
+  gap: clamp(12px, 2vw, 22px);
+}
+
+.hero-title-row h1 {
+  min-width: 0;
+}
+
+.hero-about-link {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  gap: 5px;
+  margin-bottom: 0.4rem;
+  color: var(--muted);
+  font-size: 0.88rem;
+  font-weight: 700;
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.hero-about-link span {
+  color: var(--accent-strong);
+  transition: transform 160ms ease;
+}
+
+.hero-about-link:hover span {
+  transform: translateX(3px);
+}
+
 .home-hero .hero-copy {
   max-width: 720px;
   margin-top: 18px;
@@ -304,12 +338,6 @@ select {
   text-decoration-thickness: 1px;
 }
 
-.post-card p {
-  margin: 0;
-  color: var(--muted);
-  font-size: 0.95rem;
-}
-
 .tag-row,
 .tag-filter {
   display: flex;
@@ -347,17 +375,8 @@ select {
   min-width: 0;
 }
 
-.category-accent {
-  display: block;
-  width: 28px;
-  height: 3px;
-  margin-bottom: 12px;
-  border-radius: 999px;
-  background: var(--accent);
-}
-
 .category-card h3 {
-  margin: 0 0 7px;
+  margin: 0;
   font-size: clamp(1.02rem, 1.5vw, 1.16rem);
   line-height: 1.35;
 }
@@ -367,22 +386,6 @@ select {
   align-items: center;
   gap: 7px;
   text-decoration: none;
-}
-
-.category-card h3 span {
-  color: var(--accent);
-  transition: transform 160ms ease;
-}
-
-.category-card h3 a:hover span {
-  transform: translateX(3px);
-}
-
-.category-card p {
-  margin: 0;
-  color: var(--muted);
-  font-size: 0.9rem;
-  line-height: 1.6;
 }
 
 .about-grid {
@@ -421,6 +424,7 @@ select {
 .post-shell {
   max-width: 1040px;
   padding-block: 36px 58px;
+  font-size: 0.94rem;
 }
 
 .post-header {
@@ -431,7 +435,19 @@ select {
 
 .post-header h1 {
   margin-top: 10px;
-  font-size: clamp(1.85rem, 4vw, 2.8rem);
+  font-size: clamp(1.7rem, 3.5vw, 2.4rem);
+}
+
+.post-header p {
+  font-size: clamp(0.94rem, 1.3vw, 1rem);
+}
+
+.post-header .post-card-meta {
+  font-size: 0.78rem;
+}
+
+.post-header .tag-row a {
+  font-size: 0.76rem;
 }
 
 .post-body-grid {
@@ -463,6 +479,7 @@ select {
 .toc strong {
   display: block;
   margin-bottom: 8px;
+  font-size: 0.9rem;
 }
 
 .toc ol {
@@ -484,7 +501,7 @@ select {
   border-left: 2px solid transparent;
   color: var(--muted);
   padding: 3px 0 3px 10px;
-  font-size: 0.88rem;
+  font-size: 0.82rem;
   line-height: 1.45;
   text-decoration: none;
   transition: border-color 160ms ease, color 160ms ease;
@@ -497,7 +514,7 @@ select {
 }
 
 .post-content {
-  font-size: 1rem;
+  font-size: 0.95rem;
   line-height: 1.72;
 }
 
@@ -509,12 +526,12 @@ select {
 
 .post-content h2 {
   margin-top: 2.2em;
-  font-size: 1.5rem;
+  font-size: 1.35rem;
 }
 
 .post-content h3 {
   margin-top: 1.6em;
-  font-size: 1.2rem;
+  font-size: 1.1rem;
 }
 
 .post-content p,
@@ -869,6 +886,15 @@ select {
 
   .home-hero {
     padding-top: 38px;
+  }
+
+  .hero-title-row {
+    gap: 10px;
+  }
+
+  .hero-about-link {
+    margin-bottom: 0.25rem;
+    font-size: 0.82rem;
   }
 
   .header-inner {
