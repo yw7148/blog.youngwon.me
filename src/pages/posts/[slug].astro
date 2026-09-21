@@ -83,7 +83,9 @@ const articleJsonLd = {
             <ol>
               {toc.map((heading) => (
                 <li class={`depth-${heading.depth}`}>
-                  <a href={`#${heading.slug}`}>{heading.text}</a>
+                  <a href={`#${heading.slug}`} title={heading.text}>
+                    <span class="toc-label">{heading.text}</span>
+                  </a>
                 </li>
               ))}
             </ol>
