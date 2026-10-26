@@ -49,7 +49,6 @@ tags:
   - Problem Solving
   - System Design
 series: "선택 시리즈명"
-canonicalUrl: "https://example.com/original"
 ---
 
 ## 한 줄 요약
@@ -77,14 +76,35 @@ canonicalUrl: "https://example.com/original"
 
 | 필드 | 필수 | 설명 |
 | --- | --- | --- |
-| `title` | 예 | 글 제목과 Open Graph 제목에 사용합니다. |
-| `description` | 예 | 검색, RSS, 공유 메타 설명에 사용합니다. |
+| `title` | 예 | 다른 글과 구분되는 제목을 작성합니다. 글 제목과 Open Graph 제목에 사용합니다. |
+| `description` | 예 | 해당 글의 문제와 결론을 요약합니다. 검색, RSS, 공유 메타 설명에 사용하며 글마다 다르게 작성합니다. |
 | `publishedAt` | 예 | 발행일입니다. |
-| `updatedAt` | 아니오 | 수정일이 있을 때만 입력합니다. |
+| `updatedAt` | 아니오 | 본문을 실질적으로 수정한 날짜만 입력합니다. 발행일보다 빠를 수 없습니다. |
 | `draft` | 아니오 | `true`이면 블로그 목록, 상세 페이지, RSS에서 제외합니다. |
 | `tags` | 예 | 태그 페이지와 글 목록에 사용합니다. |
 | `series` | 아니오 | 연재 글을 묶기 위한 메타데이터입니다. |
 | `canonicalUrl` | 아니오 | 외부 원문이 있을 때 canonical URL로 사용합니다. |
+| `ogImage` | 아니오 | 글별 공유 이미지의 HTTP(S) URL 또는 `/`로 시작하는 사이트 내 경로입니다. PNG·JPEG·WebP 같은 래스터 이미지를 사용합니다. |
+| `ogImageAlt` | 아니오 | `ogImage`를 설명하는 대체 텍스트입니다. 생략하면 글 제목을 사용합니다. |
+
+원본 글에는 `canonicalUrl`을 입력하지 않습니다. 기본 canonical은 해당 글의 블로그 URL이며,
+다른 URL을 canonical로 지정한 재발행 글은 sitemap에서 제외합니다.
+
+공유 이미지는 `ogImage` → 본문의 첫 번째 사용 가능한 Markdown 이미지 → 공통 기본 이미지 순으로
+선택합니다. 본문 이미지 자동 선택은 HTTP(S) URL 또는 사이트 내 `/` 경로의 인라인 Markdown
+이미지를 대상으로 하며, 코드 블록과 SVG는 제외합니다. 상대 경로나 참조형 Markdown 이미지를
+공유하려면 `ogImage`에 공개 이미지 URL을 명시합니다. 선택한 이미지는 OG와 Twitter에 동일한
+절대 URL로 제공하고, 글 대표 이미지가 있으면 Article 구조화 데이터에도 포함합니다.
+이미지는 로그인 없이 접근 가능해야 하며, 별도로 제작할 때는 1200×630 크기를 권장합니다.
+
+```yaml
+ogImage: "https://example.com/images/my-post.png"
+ogImageAlt: "중복 요청이 하나의 처리 결과로 모이는 흐름"
+```
+
+코드 예제에는 사용한 언어·라이브러리 버전, 실행 조건, 예상 결과를 필요한 만큼 설명합니다.
+외부 주장이나 구현을 참고했다면 `참고 자료`에 공식 문서 또는 원문 링크를 남기고,
+직접 관찰한 결과와 외부 자료의 내용을 구분합니다.
 
 ## 배포
 
@@ -174,7 +194,7 @@ Vercel 프로젝트의 Domains 화면에서 `blog.youngwon.me`를 추가하고, 
 - `https://blog.youngwon.me/sitemap.xml` 제출
 - `robots.txt` 접근 확인
 - 대표 글 URL 검사
-- canonical URL이 self-referencing으로 인식되는지 확인
+- 원본 글의 canonical URL이 self-referencing으로 인식되는지 확인
 - 모바일 사용성 오류 확인
 
 ## 구현된 기능
@@ -184,6 +204,7 @@ Vercel 프로젝트의 Domains 화면에서 `blog.youngwon.me`를 추가하고, 
 - `/`, `/posts`, `/posts/[slug]`, `/tags/[tag]`, `/about`
 - RSS, Sitemap, `robots.txt`
 - canonical URL, Open Graph, Twitter Card, Article JSON-LD
+- 글 대표 이미지 기반 공유 카드, 작성자 소개 및 ProfilePage JSON-LD
 - Cloudflare Web Analytics 환경 변수 지원
 - 작성일, 수정일, 예상 읽기 시간, 태그, 이전/다음 글
 - heading anchor, 목차, 코드 복사 버튼

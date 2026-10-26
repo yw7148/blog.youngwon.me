@@ -24,3 +24,14 @@ export const SITE = {
     },
   ],
 } as const;
+
+export const AUTHOR = {
+  name: SITE.author,
+  url: new URL('/about/', SITE.url).toString(),
+  description:
+    'Kotlin과 Spring으로 백엔드를 개발하며, 데이터 일관성·멱등한 처리·운영 안정성을 중심으로 문제를 해결합니다.',
+  portfolio: 'https://youngwon.me/ko',
+  cv: 'https://youngwon.me/ko/cv',
+  github: 'https://github.com/yw7148',
+  email: 'mailto:youngwon@youngwon.me',
+} as const;

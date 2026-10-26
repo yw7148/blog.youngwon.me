@@ -11,7 +11,8 @@ import {
   getReadingTime,
   setContentCacheHeaders,
 } from '../../lib/posts';
-import { SITE } from '../../lib/site';
+import { getPostCanonical, getPostImage, serializeJsonLd } from '../../lib/seo';
+import { AUTHOR } from '../../lib/site';
 import { tagHref } from '../../lib/tags';
 
 const slug = Astro.params.slug;
@@ -24,8 +25,8 @@ const { Content } = await render(post);
 const posts = await getAllPosts();
 const { newer, older } = getAdjacentPosts(posts, post.id);
 const readingTime = getReadingTime(post.data.body);
-const localCanonical = new URL(`/posts/${post.id}/`, SITE.url).toString();
-const canonical = post.data.canonicalUrl ?? localCanonical;
+const canonical = getPostCanonical(post);
+const image = getPostImage(post.data);
 const toc = post.data.headings.filter((heading) => heading.depth > 1 && heading.depth <= 3);
 const updatedAt = post.data.updatedAt ?? post.data.publishedAt;
 setContentCacheHeaders(Astro.response.headers);
@@ -34,11 +35,14 @@ const articleJsonLd = {
   '@type': 'Article',
   headline: post.data.title,
   description: post.data.description,
+  image: image.isDefault ? undefined : [image.url],
   datePublished: post.data.publishedAt.toISOString(),
   dateModified: updatedAt.toISOString(),
   author: {
     '@type': 'Person',
-    name: SITE.author,
+    '@id': `${AUTHOR.url}#author`,
+    name: AUTHOR.name,
+    url: AUTHOR.url,
   },
   mainEntityOfPage: canonical,
   url: canonical,
@@ -46,16 +50,27 @@ const articleJsonLd = {
 };
 ---
 
-<BaseLayout title={post.data.title} description={post.data.description} canonical={canonical} type="article">
+<BaseLayout
+  title={post.data.title}
+  description={post.data.description}
+  canonical={canonical}
+  image={image.url}
+  imageAlt={image.alt}
+  type="article"
+  publishedAt={post.data.publishedAt}
+  updatedAt={updatedAt}
+>
   <article class="content-width post-shell">
     <header class="post-header">
       <div class="post-card-meta">
-        <time datetime={post.data.publishedAt.toISOString()}>{formatDate(post.data.publishedAt)}</time>
+        <a href="/about/" rel="author">{AUTHOR.name}</a>
+        <span aria-hidden="true">·</span>
+        <time datetime={post.data.publishedAt.toISOString()}>작성 {formatDate(post.data.publishedAt)}</time>
         {
           post.data.updatedAt && (
             <>
               <span aria-hidden="true">·</span>
-              <span>수정 {formatDate(post.data.updatedAt)}</span>
+              <time datetime={post.data.updatedAt.toISOString()}>수정 {formatDate(post.data.updatedAt)}</time>
             </>
           )
         }
@@ -121,5 +136,5 @@ const articleJsonLd = {
       }
     </nav>
   </article>
-  <script is:inline type="application/ld+json" set:html={JSON.stringify(articleJsonLd)} />
+  <script is:inline type="application/ld+json" set:html={serializeJsonLd(articleJsonLd)} />
 </BaseLayout>
