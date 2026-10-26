@@ -358,8 +358,31 @@ select {
 }
 
 .post-card {
+  position: relative;
+  isolation: isolate;
   border-bottom: 1px solid var(--border);
   padding: clamp(18px, 2.4vw, 22px) 0;
+}
+
+.post-card-image {
+  position: absolute;
+  inset: 10px 0 10px auto;
+  width: min(48%, 360px);
+  height: calc(100% - 20px);
+  border-radius: 10px;
+  object-fit: cover;
+  opacity: 0.26;
+  mask-image: linear-gradient(to right, transparent, #000 75%);
+  pointer-events: none;
+}
+
+:root[data-theme='dark'] .post-card-image {
+  opacity: 0.2;
+}
+
+.post-card-content {
+  position: relative;
+  z-index: 1;
 }
 
 .post-card-meta {
