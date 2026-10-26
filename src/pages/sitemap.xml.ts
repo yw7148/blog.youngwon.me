@@ -1,5 +1,6 @@
 import { getAllPosts } from '../lib/posts';
 import { SITE } from '../lib/site';
+import { getPostCanonical, getPostUrl } from '../lib/seo';
 import { tagHref } from '../lib/tags';
 
 function escapeXml(value: string) {
@@ -18,7 +19,7 @@ export async function GET() {
   const paths: Array<{ path: string; lastModified?: Date }> = [
     ...staticPaths.map((path) => ({ path })),
     ...tags.map((tag) => ({ path: tagHref(tag) })),
-    ...posts.map((post) => ({
+    ...posts.filter((post) => getPostCanonical(post) === getPostUrl(post.id)).map((post) => ({
       path: `/posts/${post.id}/`,
       lastModified: post.data.updatedAt ?? post.data.publishedAt,
     })),

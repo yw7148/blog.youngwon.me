@@ -452,6 +452,18 @@ select {
   font-size: 1.3rem;
 }
 
+.about-experience {
+  padding-block: 12px 32px;
+}
+
+.about-experience h2 {
+  font-size: 1.3rem;
+}
+
+.about-experience p {
+  color: var(--muted);
+}
+
 .check-list {
   margin: 0;
   padding-left: 1.2rem;

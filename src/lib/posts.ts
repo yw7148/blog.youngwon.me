@@ -10,6 +10,8 @@ export interface PostData {
   tags: string[];
   series?: string;
   canonicalUrl?: string;
+  ogImage?: string;
+  ogImageAlt?: string;
   body: string;
   headings: Array<{ depth: number; slug: string; text: string }>;
 }
