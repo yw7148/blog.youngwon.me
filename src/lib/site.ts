@@ -1,7 +1,7 @@
 export const SITE = {
   title: 'Youngwon Tech Blog',
   description:
-    '백엔드 개발에서 마주친 문제와 선택지, 판단의 근거, 적용 후 남은 한계를 기록하는 기술 블로그.',
+    '완료 기준과 반드시 지켜야 할 조건을 세우고, 설계부터 운영까지 검증한 과정을 기록하는 백엔드 기술 블로그.',
   url: 'https://blog.youngwon.me',
   author: 'Youngwon Kim',
   locale: 'ko_KR',
@@ -29,9 +29,8 @@ export const AUTHOR = {
   name: SITE.author,
   url: new URL('/about/', SITE.url).toString(),
   description:
-    'Kotlin과 Spring으로 백엔드를 개발하며, 데이터 일관성·멱등한 처리·운영 안정성을 중심으로 문제를 해결합니다.',
+    '완료의 기준을 스스로 세우고, 반드시 지켜야 할 조건이 실제로 충족되는지 끝까지 확인하는 백엔드 개발자입니다.',
   portfolio: 'https://youngwon.me/ko',
-  cv: 'https://youngwon.me/ko/cv',
   github: 'https://github.com/yw7148',
   email: 'mailto:youngwon@youngwon.me',
 } as const;
