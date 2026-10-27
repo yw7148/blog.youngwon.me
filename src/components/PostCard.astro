@@ -1,6 +1,7 @@
 ---
 import { formatCompactDate } from '../lib/format';
 import { getReadingTime, type Post } from '../lib/posts';
+import { getPostImage } from '../lib/seo';
 import { tagHref } from '../lib/tags';
 
 interface Props {
@@ -9,18 +10,35 @@ interface Props {
 
 const { post } = Astro.props;
 const readingTime = getReadingTime(post.data.body);
+const image = getPostImage(post.data);
 ---
 
 <article class="post-card">
-  <div class="post-card-meta">
-    <time datetime={post.data.publishedAt.toISOString()}>{formatCompactDate(post.data.publishedAt)}</time>
-    <span aria-hidden="true">·</span>
-    <span>{readingTime}분</span>
-  </div>
-  <h3>
-    <a href={`/posts/${post.id}/`}>{post.data.title}</a>
-  </h3>
-  <div class="tag-row" aria-label="태그">
-    {post.data.tags.map((tag) => <a href={tagHref(tag)}>{tag}</a>)}
+  {
+    !image.isDefault && (
+      <img
+        class="post-card-image"
+        src={image.url}
+        alt=""
+        aria-hidden="true"
+        loading="lazy"
+        decoding="async"
+        width="600"
+        height="315"
+      />
+    )
+  }
+  <div class="post-card-content">
+    <div class="post-card-meta">
+      <time datetime={post.data.publishedAt.toISOString()}>{formatCompactDate(post.data.publishedAt)}</time>
+      <span aria-hidden="true">·</span>
+      <span>{readingTime}분</span>
+    </div>
+    <h3>
+      <a href={`/posts/${post.id}/`}>{post.data.title}</a>
+    </h3>
+    <div class="tag-row" aria-label="태그">
+      {post.data.tags.map((tag) => <a href={tagHref(tag)}>{tag}</a>)}
+    </div>
   </div>
 </article>
