@@ -2,6 +2,7 @@
 import { render } from 'astro:content';
 import PostComments from '../../components/PostComments.astro';
 import PostEnhancements from '../../components/PostEnhancements.astro';
+import PostFootnotes from '../../components/PostFootnotes.astro';
 import BaseLayout from '../../layouts/BaseLayout.astro';
 import { formatDate } from '../../lib/format';
 import {
@@ -110,6 +111,7 @@ const articleJsonLd = {
     </div>
 
     <PostEnhancements postId={post.id} postTitle={post.data.title} />
+    <PostFootnotes />
 
     <PostComments postId={post.id} />
 
