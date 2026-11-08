@@ -76,6 +76,20 @@ series: "선택 시리즈명"
 ## 참고 자료
 ```
 
+## 각주
+
+본문에서는 `LearningHub[^learninghub]`처럼 표시하고, 글 끝에 설명을 정의합니다.
+
+```markdown
+추천 결과를 저장하는 LearningHub[^learninghub]와 연동했다.
+
+[^learninghub]: 추천 서버와 연동해 추천 결과를 저장하고 사용자 서비스에 제공하는 백엔드 서비스.
+```
+
+각주 번호에 마우스를 올리거나 키보드 포커스를 두면 설명이 표시됩니다. 클릭·터치로
+설명을 열어둘 수 있으며, 다시 누르거나 닫기 버튼·바깥 영역·Escape로 닫습니다.
+글 끝의 각주와 본문으로 돌아가는 링크도 제공해 JavaScript 없이 읽을 수 있습니다.
+
 ## Frontmatter
 
 | 필드 | 필수 | 설명 |
@@ -216,7 +230,7 @@ Vercel 프로젝트의 Domains 화면에서 `blog.youngwon.me`를 추가하고, 
 - 글 대표 이미지 기반 공유 카드, 작성자 소개 및 ProfilePage JSON-LD
 - Cloudflare Web Analytics 환경 변수 지원
 - 작성일, 수정일, 예상 읽기 시간, 태그, 이전/다음 글
-- heading anchor, 목차, 코드 복사 버튼
+- heading anchor, 목차, 코드 복사 버튼, hover·포커스·터치로 읽는 각주
 - 글별 조회수, 하루 한 번 좋아요, Web Share 및 링크 복사
 - 게시글별 최신순 댓글, 20개 단위 더 보기, HMAC 기반 작성 빈도 제한
 - 반응형 레이아웃과 다크 모드

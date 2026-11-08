@@ -1,0 +1,259 @@
+<script>
+  const enhanceFootnotes = () => {
+    const article = document.querySelector<HTMLElement>('.post-content');
+    if (!article) return;
+
+    const references = article.querySelectorAll<HTMLAnchorElement>('a[data-footnote-ref]');
+    if (references.length === 0) return;
+
+    const heading = article.querySelector('[data-footnotes] h2');
+    if (heading) heading.textContent = '각주';
+    article.querySelectorAll('[data-footnote-backref]').forEach((link) => {
+      link.setAttribute('aria-label', '본문으로 돌아가기');
+    });
+
+    const preview = document.createElement('aside');
+    preview.id = 'post-footnote-preview';
+    preview.className = 'footnote-preview';
+    preview.setAttribute('role', 'dialog');
+    preview.hidden = true;
+
+    const header = document.createElement('div');
+    header.className = 'footnote-preview-header';
+    const label = document.createElement('strong');
+    const closeButton = document.createElement('button');
+    closeButton.type = 'button';
+    closeButton.textContent = '×';
+    closeButton.setAttribute('aria-label', '각주 닫기');
+    header.append(label, closeButton);
+    const content = document.createElement('div');
+    content.className = 'footnote-preview-content';
+    preview.append(header, content);
+    document.body.append(preview);
+
+    let active: HTMLAnchorElement | undefined;
+    let pinned = false;
+    let ignoreFocus = false;
+    let hideTimer: number | undefined;
+
+    const cancelHide = () => window.clearTimeout(hideTimer);
+
+    const dismiss = (restoreFocus = false) => {
+      cancelHide();
+      const reference = active;
+      reference?.setAttribute('aria-expanded', 'false');
+      active = undefined;
+      pinned = false;
+      preview.hidden = true;
+      if (restoreFocus && reference) {
+        ignoreFocus = true;
+        reference.focus({ preventScroll: true });
+        ignoreFocus = false;
+      }
+    };
+
+    const positionPreview = () => {
+      if (!active) return;
+      const anchor = active.getBoundingClientRect();
+      const box = preview.getBoundingClientRect();
+      const inset = 12;
+      const gap = 8;
+      const below = window.innerHeight - anchor.bottom - gap - inset;
+      const above = anchor.top - gap - inset;
+      const top = below >= box.height || below >= above
+        ? anchor.bottom + gap
+        : anchor.top - box.height - gap;
+      preview.style.left = `${Math.max(inset, Math.min(anchor.left, window.innerWidth - box.width - inset))}px`;
+      preview.style.top = `${Math.max(inset, Math.min(top, window.innerHeight - box.height - inset))}px`;
+    };
+
+    const scheduleHide = () => {
+      cancelHide();
+      hideTimer = window.setTimeout(() => {
+        if (pinned || active === document.activeElement || preview.contains(document.activeElement)) return;
+        if (active?.matches(':hover') || preview.matches(':hover')) return;
+        dismiss();
+      }, 180);
+    };
+
+    references.forEach((reference) => {
+      let id: string;
+      try {
+        id = decodeURIComponent(reference.hash.slice(1));
+      } catch {
+        return;
+      }
+      const note = document.getElementById(id);
+      if (!note || !article.contains(note)) return;
+
+      reference.setAttribute('role', 'button');
+      reference.setAttribute('aria-haspopup', 'dialog');
+      reference.setAttribute('aria-controls', preview.id);
+      reference.setAttribute('aria-expanded', 'false');
+      reference.setAttribute('aria-label', `각주 ${reference.textContent} 보기`);
+      reference.setAttribute('aria-describedby', note.id);
+
+      const show = () => {
+        cancelHide();
+        if (active !== reference) {
+          active?.setAttribute('aria-expanded', 'false');
+          pinned = false;
+          const copy = note.cloneNode(true) as HTMLElement;
+          copy.querySelectorAll('[data-footnote-backref]').forEach((link) => link.remove());
+          copy.querySelectorAll('[id]').forEach((element) => element.removeAttribute('id'));
+          content.replaceChildren(...copy.childNodes);
+          label.textContent = `각주 ${reference.textContent}`;
+          preview.setAttribute('aria-label', label.textContent);
+          active = reference;
+        }
+        reference.setAttribute('aria-expanded', 'true');
+        preview.hidden = false;
+        positionPreview();
+      };
+
+      reference.addEventListener('pointerenter', (event) => {
+        if (event.pointerType === 'mouse') show();
+      });
+      reference.addEventListener('pointerleave', scheduleHide);
+      reference.addEventListener('focus', () => {
+        if (!ignoreFocus) show();
+      });
+      reference.addEventListener('blur', scheduleHide);
+      reference.addEventListener('click', (event) => {
+        event.preventDefault();
+        if (active === reference && pinned) dismiss();
+        else {
+          show();
+          pinned = true;
+          if (event.detail === 0) closeButton.focus();
+        }
+      });
+      reference.addEventListener('keydown', (event) => {
+        if (event.key === ' ') {
+          event.preventDefault();
+          reference.click();
+        }
+      });
+    });
+
+    preview.addEventListener('pointerenter', cancelHide);
+    preview.addEventListener('pointerleave', scheduleHide);
+    preview.addEventListener('focusin', cancelHide);
+    preview.addEventListener('focusout', scheduleHide);
+    closeButton.addEventListener('click', () => dismiss(true));
+    document.addEventListener('pointerdown', (event) => {
+      if (active && event.target instanceof Node && !preview.contains(event.target) && !active.contains(event.target)) {
+        dismiss();
+      }
+    });
+    document.addEventListener('keydown', (event) => {
+      if (event.key === 'Escape' && active) {
+        event.preventDefault();
+        dismiss(preview.contains(document.activeElement));
+      }
+    });
+    window.addEventListener('scroll', () => dismiss(), { passive: true });
+    window.addEventListener('resize', positionPreview, { passive: true });
+  };
+
+  enhanceFootnotes();
+</script>
+
+<style is:global>
+  .post-content [data-footnote-ref] {
+    display: inline-flex;
+    min-width: 24px;
+    min-height: 24px;
+    align-items: center;
+    justify-content: center;
+    border-radius: 5px;
+    background: var(--accent-soft);
+    font-family: var(--font-mono);
+    line-height: 1;
+    text-decoration: none;
+    cursor: pointer;
+  }
+
+  .post-content [data-footnote-ref]:is(:hover, [aria-expanded='true']) {
+    background: var(--accent);
+    color: var(--surface);
+  }
+
+  .post-content [data-footnotes] {
+    margin-top: 2.5rem;
+    border-top: 1px solid var(--border);
+    padding-top: 0.75rem;
+    font-size: 0.85rem;
+  }
+
+  .post-content [data-footnotes] h2 {
+    margin-top: 0.75rem;
+    font-size: 1rem;
+  }
+
+  .post-content [data-footnotes] li {
+    scroll-margin-top: 96px;
+  }
+
+  .footnote-preview {
+    position: fixed;
+    z-index: 40;
+    width: min(360px, calc(100vw - 24px));
+    max-height: min(360px, calc(100dvh - 24px));
+    overflow: auto;
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    background: var(--surface);
+    color: var(--text);
+    box-shadow: var(--shadow);
+    padding: 12px 16px 16px;
+    font-size: 0.88rem;
+    line-height: 1.65;
+    overflow-wrap: anywhere;
+  }
+
+  .footnote-preview[hidden] {
+    display: none;
+  }
+
+  .footnote-preview-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    margin-bottom: 6px;
+    color: var(--muted);
+    font-size: 0.76rem;
+  }
+
+  .footnote-preview-header button {
+    width: 28px;
+    height: 28px;
+    border: 0;
+    border-radius: 5px;
+    background: var(--surface-muted);
+    color: var(--text);
+    font-size: 1.15rem;
+    line-height: 1;
+    cursor: pointer;
+  }
+
+  .footnote-preview-content > :first-child {
+    margin-top: 0;
+  }
+
+  .footnote-preview-content > :last-child {
+    margin-bottom: 0;
+  }
+
+  .footnote-preview-content a {
+    color: var(--accent-strong);
+  }
+
+  .footnote-preview-content code {
+    border-radius: 4px;
+    background: var(--surface-muted);
+    font-family: var(--font-mono);
+    padding: 0.1em 0.25em;
+  }
+</style>
