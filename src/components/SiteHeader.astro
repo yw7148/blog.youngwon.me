@@ -15,16 +15,13 @@ const isAbout = pathname.startsWith('/about/');
       </svg>
     </a>
     <a
-      class="dock-item"
+      class="dock-item dock-item--brand"
       href="/"
       aria-label="블로그 홈"
       aria-current={isBlogHome ? 'page' : undefined}
       data-tooltip="Blog"
     >
-      <svg viewBox="0 0 24 24" aria-hidden="true">
-        <path d="M4 5.5A2.5 2.5 0 0 1 6.5 3H11v17H6.5A2.5 2.5 0 0 0 4 22z" />
-        <path d="M20 5.5A2.5 2.5 0 0 0 17.5 3H13v17h4.5A2.5 2.5 0 0 1 20 22z" />
-      </svg>
+      <img src="/logo.png" alt="" width="24" height="24" />
     </a>
 
     <span class="dock-separator" aria-hidden="true"></span>
@@ -78,6 +75,12 @@ const isAbout = pathname.startsWith('/about/');
     </button>
   </nav>
 </header>
+
+<style>
+  .dock-item--brand {
+    padding: 0;
+  }
+</style>
 
 <script>
   const button = document.querySelector<HTMLButtonElement>('[data-theme-toggle]');
